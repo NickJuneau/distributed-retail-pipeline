@@ -10,7 +10,9 @@ from datetime import datetime, timezone
 def main():
 
     count = 0
-    ROWS_TO_READ = 541910
+    # If read all is true, ROWS_TO_READ will not matter. ROWS_TO_READ is for testing code only
+    ROWS_TO_READ = 10000
+    READ_ALL = True
 
     purchaseCount = 0
     adjustmentCount = 0
@@ -19,17 +21,6 @@ def main():
     unknownCount = 0
     
     with open(file='data/online-retail-dataset.csv', mode='r', encoding='utf-8-sig') as file:
-        
-        MAX_ROWS = sum(1 for line in file)
-
-        # Checks edgecase if ROWS_TO_READ is longer than csv file inputed
-        if ROWS_TO_READ > MAX_ROWS:
-            ROWS_TO_READ = MAX_ROWS
-
-
-        # Resets the pointer back to top of file
-        file.seek(0)
-
         reader = csv.DictReader(file)
 
         for row in reader:
@@ -44,7 +35,7 @@ def main():
                 "unitPrice": float(row["UnitPrice"]),
                 "customerId": row["CustomerID"] if row["CustomerID"] else None,
                 "country": row["Country"], 
-                "sourceEventTime": row["InvoiceDate"], 
+                "sourceEventTime": toUTC(row["InvoiceDate"]), 
                 "replayedAt": datetime.now(timezone.utc).isoformat()
             }
 
@@ -65,7 +56,8 @@ def main():
             # print(jsonString)
 
             count += 1
-            if count == ROWS_TO_READ: # This loop will read ROWS_TO_READ amount of rows
+            # If user wants to read all rows, set READ_ALL to True
+            if count == ROWS_TO_READ and READ_ALL == False:
                 break
 
         print(f"Purchases: {purchaseCount}\nAdjustments: {adjustmentCount}\nCancellations: {cancellationCount}\nPromotions: {promotionCount}\nUnknowns: {unknownCount}")
@@ -77,32 +69,34 @@ def main():
         row: The row being observed and passed by the main method
 
     Returns: 
-        String of event type of the following options: PURCHASE, ADJUSTMENT, CANCELLATION, PROMOTION, and UNKNOWN. 
+        Event type of the following options: PURCHASE, ADJUSTMENT, CANCELLATION, PROMOTION, and UNKNOWN. 
         UNKNOWN is a catch all however nothing shall fall into unknown
 """
-def classifyEvent(row):
+def classifyEvent(row) -> str:
     # TODO Return Type: Type of event... ENUM? For now will skip ENUM but I think it fits here
     
     # Possible event types: PURCHASE, ADJUSTMENT, CANCELLATION, PROMOTION, and UNKNOWN (Unknown should never happen but is for anomalies not caught)
     retEventType = "NONE"
 
     # Get common vars
-    stockCode = row["StockCode"]
+    stockCodeClean = row["StockCode"].strip().upper()
     invoiceNumber = row["InvoiceNo"]
     price = row["UnitPrice"]
     quantity = row["Quantity"]
 
 
     # ADJUSTMENT: Checks for non-inventory stock codes (`D`, `POST`, `M`, `BANK CHARGES`, `B` etc.)
+    NON_INVENTORY_CODES = {"POST", "D", "M", "BANK CHARGES", "B"}
+
     # Second case accounts for internal store write-offs for damaged, lost, or expired stock
-    if (stockCode == "POST" or stockCode == "D" or stockCode == "M" or stockCode == "BANK CHARGES" or stockCode == "B") or (float(price) == 0 and int(quantity) < 0): 
+    if stockCodeClean in NON_INVENTORY_CODES or (float(price) == 0 and int(quantity) < 0): 
         retEventType = "ADJUSTMENT"
 
     # Cancellations (or Returns)
     elif invoiceNumber[0:1] == "C" and float(price) > 0:
         retEventType = "CANCELLATION"
 
-    elif (float(price) > 0 and stockCode != ""): 
+    elif (float(price) > 0 and stockCodeClean != ""): 
         retEventType = "PURCHASE"
 
     elif float(price) == 0 and int(quantity) > 0:
@@ -115,6 +109,18 @@ def classifyEvent(row):
         print(json.dumps(row, indent=2)+"\n")
 
     return retEventType
+
+""" Helper function to translate the given date and time to standard ISO-8601 
+
+    Args:
+        date: The raw date and time string from the dataset column.
+
+    Returns:
+        The formatted ISO-8601 UTC timestamp
+"""
+def toUTC(date) -> str:
+    dt = datetime.strptime(date.strip(), "%m/%d/%Y %H:%M")
+    return dt.replace(tzinfo=timezone.utc).isoformat()
 
 if __name__ == "__main__":
     main()
