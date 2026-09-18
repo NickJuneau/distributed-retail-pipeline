@@ -24,22 +24,10 @@ def main():
         reader = csv.DictReader(file)
 
         for row in reader:
-            eventType = classifyEvent(row)
-
-            eventDict = {
-                "invoiceNo": row["InvoiceNo"],
-                "eventType": eventType,
-                "stockCode": row["StockCode"],
-                "description": row["Description"].strip() if row["Description"] else "",
-                "quantity": int(row["Quantity"]),
-                "unitPrice": float(row["UnitPrice"]),
-                "customerId": row["CustomerID"] if row["CustomerID"] else None,
-                "country": row["Country"], 
-                "sourceEventTime": toUTC(row["InvoiceDate"]), 
-                "replayedAt": datetime.now(timezone.utc).isoformat()
-            }
+            eventDict = normalizeRow(row)
 
             jsonString = json.dumps(eventDict, indent=2)
+            # print(jsonString)
 
             # Get counts for testing
             if eventDict["eventType"] == "PURCHASE":
@@ -52,8 +40,6 @@ def main():
                 promotionCount += 1
             elif eventDict["eventType"] == "UNKNOWN":
                 unknownCount += 1
-            
-            # print(jsonString)
 
             count += 1
             # If user wants to read all rows, set READ_ALL to True
@@ -121,6 +107,33 @@ def classifyEvent(row) -> str:
 def toUTC(date) -> str:
     dt = datetime.strptime(date.strip(), "%m/%d/%Y %H:%M")
     return dt.replace(tzinfo=timezone.utc).isoformat()
+
+""" Assembles dictionary of standardized values to be used in main function
+
+    Args:
+        row: The specific row being parsed
+
+    Returns:
+        eventDict: Dictionary of normalized values
+"""
+def normalizeRow(row):
+    eventType = classifyEvent(row)
+    formattedTime = toUTC(row["InvoiceDate"])
+
+    eventDict = {
+        "invoiceNo": row["InvoiceNo"],
+        "eventType": eventType,
+        "stockCode": row["StockCode"],
+        "description": row["Description"].strip() if row["Description"] else "",
+        "quantity": int(row["Quantity"]),
+        "unitPrice": float(row["UnitPrice"]),
+        "customerId": row["CustomerID"] if row["CustomerID"] else None,
+        "country": row["Country"], 
+        "sourceEventTime": formattedTime, 
+        "replayedAt": datetime.now(timezone.utc).isoformat()
+    }
+
+    return eventDict
 
 if __name__ == "__main__":
     main()
