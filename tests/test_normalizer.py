@@ -1,4 +1,4 @@
-from services.replay.parser import classifyEvent, normalizeRow
+from services.replay.parser import classifyEvent, normalizeRow, toUTC
 
 def test_classify_purchase():
     mock_row = {
@@ -69,4 +69,7 @@ def test_null_customer_id():
     result = normalizeRow(mock_row)
     assert result["customerID"] is None
 
-# TODO Implement timestamp test
+def test_timestamp_formatting():
+    raw_date = "12/1/2010 11:38"
+    parsed_date = toUTC(raw_date)
+    assert parsed_date == "2010-12-01T11:38:00+00:00"
