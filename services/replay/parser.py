@@ -30,15 +30,15 @@ def main():
             # print(jsonString)
 
             # Get counts for testing
-            if eventDict["eventType"] == "PURCHASE":
+            if eventDict["event_type"] == "PURCHASE":
                 purchaseCount += 1
-            elif eventDict["eventType"] == "ADJUSTMENT":
+            elif eventDict["event_type"] == "ADJUSTMENT":
                 adjustmentCount += 1
-            elif eventDict["eventType"] == "CANCELLATION":
+            elif eventDict["event_type"] == "CANCELLATION":
                 cancellationCount += 1
-            elif eventDict["eventType"] == "PROMOTION":
+            elif eventDict["event_type"] == "PROMOTION":
                 promotionCount += 1
-            elif eventDict["eventType"] == "UNKNOWN":
+            elif eventDict["event_type"] == "UNKNOWN":
                 unknownCount += 1
 
             count += 1
@@ -121,16 +121,16 @@ def normalizeRow(row):
     formattedTime = toUTC(row["InvoiceDate"])
 
     eventDict = {
-        "invoiceNo": row["InvoiceNo"],
-        "eventType": eventType,
-        "stockCode": row["StockCode"],
+        "invoice_no": row["InvoiceNo"],
+        "event_type": eventType,
+        "stock_code": row["StockCode"],
         "description": row["Description"].strip() if row["Description"] else "",
         "quantity": int(row["Quantity"]),
-        "unitPrice": float(row["UnitPrice"]),
-        "customerID": row["CustomerID"] if row["CustomerID"] else None,
+        "unit_price": float(row["UnitPrice"]),
+        "customer_id": row["CustomerID"] if row["CustomerID"] else None,
         "country": row["Country"], 
-        "sourceEventTime": formattedTime, 
-        "replayedAt": datetime.now(timezone.utc).isoformat()
+        "source_event_time": formattedTime, 
+        "replayed_at": datetime.now(timezone.utc).isoformat()
     }
 
     return eventDict

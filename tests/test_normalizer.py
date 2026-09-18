@@ -67,7 +67,7 @@ def test_null_customer_id():
     }
 
     result = normalizeRow(mock_row)
-    assert result["customerID"] is None
+    assert result["customer_id"] is None
 
 def test_timestamp_formatting():
     raw_date = "12/1/2010 11:38"
