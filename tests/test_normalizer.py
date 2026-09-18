@@ -1,4 +1,4 @@
-from services.replay.parser import classifyEvent
+from services.replay.parser import classifyEvent, normalizeRow
 
 def test_classify_purchase():
     mock_row = {
@@ -54,14 +54,19 @@ def test_classify_promotion():
     result = classifyEvent(mock_row)
     assert result == "PROMOTION"
 
+def test_null_customer_id():
+    mock_row = {
+        "InvoiceNo": "536365",
+        "StockCode": "85123A",
+        "Description": "WHITE HANGING HEART T-LIGHT HOLDER",
+        "Quantity": "6",
+        "InvoiceDate": "12/1/2010 9:41",
+        "UnitPrice": "2.55",
+        "CustomerID": "",
+        "Country": "United Kingdom"
+    }
 
-"""In order to complete both null customer and timestamp test 
-   I will have to first refactor parser.py and create normalizeRow() 
-   function to handle creating a row and assigning values
-"""
-# TODO Implement null customer id test 
-# def test_classify_null_customer_id():
-
-    
+    result = normalizeRow(mock_row)
+    assert result["customerID"] is None
 
 # TODO Implement timestamp test
