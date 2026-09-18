@@ -127,7 +127,7 @@ def normalizeRow(row):
         "description": row["Description"].strip() if row["Description"] else "",
         "quantity": int(row["Quantity"]),
         "unitPrice": float(row["UnitPrice"]),
-        "customerId": row["CustomerID"] if row["CustomerID"] else None,
+        "customerID": row["CustomerID"] if row["CustomerID"] else None,
         "country": row["Country"], 
         "sourceEventTime": formattedTime, 
         "replayedAt": datetime.now(timezone.utc).isoformat()
