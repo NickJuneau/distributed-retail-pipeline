@@ -2,7 +2,7 @@ import csv
 import json
 from datetime import datetime, timezone
 
-""" Parses retail dataset by row and assigns an event type.
+""" Parses retail dataset by row and assigns an event type. Used for testing.
 
 
     Output: JSON format of all datapoints from the table along with the given event type.
