@@ -11,7 +11,7 @@ WORKDIR /app
 RUN adduser --disabled-password --gecos "" appuser
 
 # Copy requirments and install dependencies
-COPY services/replay/requirments.txt .
+COPY services/replay/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code and data
