@@ -83,3 +83,10 @@ resource "google_pubsub_subscription" "retail_transactions_sub" {
   # Retain unacknowledged messages for up to 7 days
   message_retention_duration = "604800s"
 }
+
+resource "google_artifact_registry_repository" "retail_repo" {
+  location = var.region
+  repository_id = "retail-pipeline"
+  description = "Docker repository for retail pipeline microservices"
+  format = "DOCKER"
+}
