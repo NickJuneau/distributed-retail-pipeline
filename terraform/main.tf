@@ -12,7 +12,7 @@ resource "google_bigquery_table" "transactions" {
 
   time_partitioning {
     type = "DAY"
-    field = "source_event_time"
+    field = "replayed_at"
   }
 
   clustering = [ "stock_code", "country", "event_type" ]
