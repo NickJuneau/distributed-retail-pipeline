@@ -2,3 +2,6 @@ data/
 *.csv
 __pycache__/
 .env
+*.tfstate
+*.tfstate.backup
+.terraform/
