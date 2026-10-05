@@ -30,11 +30,11 @@ def callback(message: pubsub_v1.subscriber.message.Message):
             message.ack()
         else:
             print(f"[Worker] BigQuery insertion error: {errors}")
-            message.ack()
+            message.nack()
 
     except Exception as e:
         print(f"[Worker] Error processing message: {e}")
-        message.ack()
+        message.nack()
 
 def main():
     print(f"Ingestion Worker listening on {subscription_path}...\n")
