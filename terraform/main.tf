@@ -70,3 +70,16 @@ resource "google_bigquery_table" "transactions" {
     }
   ])
 }
+
+resource "google_pubsub_topic" "retail-transactions" {
+  name = "retail-transactions"
+}
+
+resource "google_pubsub_subscription" "retail_transactions_sub" {
+  name = "retail-transactions-sub"
+  topic = google_pubsub_topic.retail-transactions.id
+  ack_deadline_seconds = 20
+  
+  # Retain unaclnowledged messages for up to 7 days
+  message_retention_duration = "604800s"
+}
