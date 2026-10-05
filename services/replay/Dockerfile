@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Create a dedicated non-root user for security
-RUN addusr --disabled-password --gecos "" appuser
+RUN adduser --disabled-password --gecos "" appuser
 
 # Copy requirments and install dependencies
 COPY services/replay/requirments.txt .
