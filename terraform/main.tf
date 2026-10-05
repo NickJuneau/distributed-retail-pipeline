@@ -77,7 +77,7 @@ resource "google_pubsub_topic" "retail_transactions" {
 
 resource "google_pubsub_subscription" "retail_transactions_sub" {
   name = "retail-transactions-sub"
-  topic = google_pubsub_topic.retail-transactions.id
+  topic = google_pubsub_topic.retail_transactions.id
   ack_deadline_seconds = 20
 
   # Retain unacknowledged messages for up to 7 days
