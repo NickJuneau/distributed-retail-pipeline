@@ -147,3 +147,44 @@ resource "google_compute_instance" "replay_vm" {
   ]
 }
 
+# Service Account for GKE Nodes
+resource "google_service_account" "gke_nodes_sa" {
+  account_id = "gke-nodes-sa"
+  display_name = "Service Account for GKE Cluster Nodes"
+}
+
+# Grant Artifact Registry Reader to GKE Nodes
+resource "google_project_iam_member" "gke_nodes_ar_reader" {
+  project = var.project_id
+  role = "roles/artifactregistry.reader"
+  member = "serviceAccount:${google_service_account.gke_nodes_sa.email}"
+}
+
+# GKE Cluster
+resource "google_container_cluster" "primary" {
+  name = "retail-pipeline-cluster"
+  location = var.zone
+
+  # Remove default node pool so we can define a customized lightweight node pool
+  remove_default_node_pool = true
+  initial_node_count = 1
+  workload_identity_config {
+    workload_pool = "${var.project_id}.svc.id.goog"
+  }
+}
+
+# Managed Node Pool
+resource "google_container_node_pool" "primary_nodes" {
+  name = "retail-nodes"
+  location = var.zone
+  cluster = google_container_cluster.primary.name
+  node_count = 1
+
+  node_config {
+    spot = true
+    machine_type = "e2-medium"
+
+    service_account = google_service_account.gke_nodes_sa.email
+    oauth_scopes = [ "https://www.googleapis.com/auth/cloud-platform" ]
+  }
+}
