@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-service-deployment
+  labels:
+    app: worker-service
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: worker-service
+
+  template:
+    metadata:
+      labels:
+        app: worker-service
+
+    spec:
+      serviceAccountName: worker-ksa
+
+      containers:
+        - name: worker-service
+          image: us-central1-docker.pkg.dev/distributed-retail-pipeline/retail-pipeline/worker-service:v1
+          imagePullPolicy: Always
+
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "distributed-retail-pipeline"
+            - name: PUBSUB_SUBSCRIPTION
+              value: "retail-transactions-sub"
+            - name: BIGQUERY_DATASET
+              value: "retail_warehouse"
+            - name: BIGQUERY_TABLE
+              value: "raw_events"
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
