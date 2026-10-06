@@ -90,3 +90,60 @@ resource "google_artifact_registry_repository" "retail_repo" {
   description = "Docker repository for retail pipeline microservices"
   format = "DOCKER"
 }
+
+resource "google_service_account" "replay_vm_sa" {
+  account_id = "replay-vm-sa"
+  display_name = "Service Account for Replay Producer VM"
+}
+
+resource "google_project_iam_member" "replay_pubsub_publisher" {
+  project = var.project_id
+  role = "roles/pubsub.publisher"
+  member = "serviceAccount:${google_service_account.replay_vm_sa.email}"
+}
+
+resource "google_project_iam_member" "replay_ar_reader" {
+  project = var.project_id
+  role = "roles/artifactregistry.reader"
+  member = "serviceAccount:${google_service_account.replay_vm_sa.email}"
+}
+
+resource "google_compute_instance" "replay_vm" {
+  name = "replay-producer-vm"
+  machine_type = "e2-micro"
+  zone = var.zone
+
+  boot_disk {
+    initialize_params {
+      image = "cos-cloud/cos-stable"
+    }
+  }
+
+  network_interface {
+    network = "default"
+    access_config {}
+  }
+
+  service_account {
+    email = google_service_account.replay_vm_sa.email
+    scopes = ["cloud-platform"]
+  }
+
+  # Startup script: Pulls and runs the replay container automatically on boot
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    docker-credential-gcr configure-docker --registries=us-central1-docker.pkg.dev
+    docker run -d --restart=always \
+      --name replay-producer \
+      -e GOOGLE_CLOUD_PROJECT="${var.project_id}" \
+      us-central1-docker.pkg.dev/${var.project_id}/retail-pipeline/replay-service:v1 \
+      --limit 100 --delay 1.0
+  EOF
+
+  depends_on = [ 
+    google_artifact_registry_repository.retail_repo, 
+    google_project_iam_member.replay_ar_reader,
+    google_project_iam_member.replay_pubsub_publisher
+  ]
+}
+
